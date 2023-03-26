@@ -5,7 +5,7 @@ import xml.dom.minidom
 import csv
 from tqdm import tqdm
 # assign directory
-directory = 'files'
+directory = 'D:\gg'
 
 # iterate over files in
 # that directory
@@ -13,6 +13,8 @@ data =  []
 no=0
 for filename in tqdm(os.listdir(directory)):
     no +=1
+    if filename.endswith(".md5"):
+        continue
 
 
     f = os.path.join(directory, filename)
@@ -21,7 +23,8 @@ for filename in tqdm(os.listdir(directory)):
 
     if os.path.isfile(f):
         input = gzip.open(f"{f}", 'r')
-        for event, elem in ET.iterparse(input, events=('start', 'end')):
+        print(f"parsing {f}")
+        for event, elem in tqdm(ET.iterparse(input, events=('start', 'end'))):
             if event == 'start':
                 if elem.tag == "PubmedArticle":
                     pub = {}  # INITIALIZE ARTICLE DICT
@@ -30,8 +33,7 @@ for filename in tqdm(os.listdir(directory)):
                     pub["PMID"] = elem.text
                     pub["PublicationType"] = []
 
-                elif elem.tag == 'ArticleTitle':
-                    pub["title"] = elem.text
+
 
 
 
@@ -67,12 +69,9 @@ for filename in tqdm(os.listdir(directory)):
                     authortext=[]
                     for author in elem:
                         authorcount+=1
-                        for child in author:
-                            if child.tag=='LastName':
 
-                                authortext.append(child.text)
                     pub["Authors"] = authorcount
-                    pub["names"] = authortext
+
 
 
 
@@ -86,14 +85,23 @@ for filename in tqdm(os.listdir(directory)):
 
             if event == 'end':
                 if elem.tag == "PubmedArticle":
-                    pub["Source"] = filename
-                    try:
-                        with open("D:/pubmedscrapedata/data.csv", 'a', encoding='UTF8', newline='') as f:
-                            # using csv.writer method from CSV package
-                            resultList = list(pub.values())
-                            write = csv.writer(f)
 
-                            write.writerow(resultList)
+                    try:
+                        if no<=551:
+                            with open("D:/pubmedscrapedatanew/datanewa.csv", 'a', encoding='UTF8', newline='') as f:
+                                # using csv.writer method from CSV package
+                                resultList = list(pub.values())
+                                write = csv.writer(f)
+
+                                write.writerow(resultList)
+                        else:
+                            with open("D:/pubmedscrapedatanew/datanewb.csv", 'a', encoding='UTF8', newline='') as f:
+                                # using csv.writer method from CSV package
+                                resultList = list(pub.values())
+                                write = csv.writer(f)
+
+                                write.writerow(resultList)
+
                     except:
                         with open(f"D:/pubmedscrapedata/data_{no}.csv", 'a', encoding='UTF8', newline='') as f:
                             # using csv.writer method from CSV package
@@ -105,8 +113,9 @@ for filename in tqdm(os.listdir(directory)):
 
             elem.clear()
 
-
-
+        print (f"completed parsing {f}")
+        with open("parsecompleted.txt", "a") as checkfile:
+            checkfile.write(f'{filename}\n')
 
 
 
